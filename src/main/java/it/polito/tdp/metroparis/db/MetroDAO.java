@@ -70,10 +70,8 @@ public class MetroDAO {
 	}
 
 	public boolean fermateCollegate(Fermata f1, Fermata f2) {
-		String sql = "SELECT COUNT(*) AS cnt " +
-				"FROM connessione " +
-				"WHERE (id_stazP=? AND id_stazA=?) OR " +
-				"(id_stazP=? AND id_stazA=?)" ;
+		final String sql = "SELECT COUNT(*) AS cnt " + "FROM connessione "
+				+ "WHERE (id_stazP= ? AND id_stazA = ?) OR (id_stazP= ? AND id_stazA = ?)";
 
 		try {
 			Connection conn = DBConnect.getConnection();
@@ -82,61 +80,73 @@ public class MetroDAO {
 			st.setInt(2, f2.getIdFermata());
 			st.setInt(3, f2.getIdFermata());
 			st.setInt(4, f1.getIdFermata());
-			
-			ResultSet rs = st.executeQuery() ;
-			
+			ResultSet rs = st.executeQuery();
+
 			rs.first();
-			
-			int conteggio = rs.getInt("cnt") ;
-						
+
+			int conteggio = rs.getInt("cnt");
+
+			st.close();
 			conn.close();
-			
-			return (conteggio>0) ;
-			
+
+			return (conteggio > 0);
+
 		} catch (SQLException e) {
-			throw new RuntimeException("Errore query", e);
+			e.printStackTrace();
+			throw new RuntimeException("Errore di connessione al Database.");
 		}
+
 	}
-	
-	public List<Connessione> getAllConnessioni(List<Fermata> fermate) {
-		String sql = "SELECT  id_connessione, id_linea, id_stazP, id_stazA "
-				+ "FROM connessione "
-				+ "WHERE id_stazP>id_stazA" ;
+
+	public List<Connessione> getAllConnessione(List<Fermata> fermate) {
+
+		final String sql = "SELECT id_connessione, id_linea, id_stazP, id_stazA " + "FROM connessione "
+				+ "WHERE id_stazP>id_stazA";
+
 		
+
 		try {
-			Connection conn = DBConnect.getConnection() ;
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			ResultSet rs = st.executeQuery();
 			
-			PreparedStatement st = conn.prepareStatement(sql) ;
-			
-			ResultSet rs = st.executeQuery() ;
-			
-			List<Connessione> result = new ArrayList<Connessione>();
-			while(rs.next()) {
+			List<Connessione> connessioni = new ArrayList<Connessione>();
+
+			while (rs.next()) {
 				
-				int id_partenza = rs.getInt("id_stazP") ;
-				Fermata fermata_partenza = null ;
-				for(Fermata f: fermate) 
-					if(f.getIdFermata()==id_partenza)
-						fermata_partenza = f ;
-				
-				int id_arrivo= rs.getInt("id_stazA") ;
-				Fermata fermata_arrivo = null ;
-				for(Fermata f: fermate) 
-					if(f.getIdFermata()==id_arrivo)
-						fermata_arrivo = f ;
+				int id_partenza = rs.getInt("id_stazP");
+				Fermata fermata_partenza = null;
+
+				for (Fermata f : fermate) {
+					if (f.getIdFermata() == id_partenza) {
+						fermata_partenza = f;
+					}
+				}
+
+				int id_arrivo = rs.getInt("id_stazA");
+				Fermata fermata_arrivo = null;
+
+				for (Fermata f : fermate) {
+					if (f.getIdFermata() == id_arrivo) {
+						fermata_arrivo = f;
+					}
+				}
 
 				Connessione c = new Connessione(rs.getInt("id_connessione"),
-						null, // ingnoro la linea, adesso non ci serve
-						fermata_partenza,
-						fermata_arrivo) ;
-				result.add(c);
+						null, fermata_partenza, fermata_arrivo);
+				connessioni.add(c);
 			}
-			
-			conn.close() ;
-			return result ;
+
+			st.close();
+			conn.close();
+			return connessioni;
+
 		} catch (SQLException e) {
-			throw new RuntimeException("Errore DB", e) ;
+			e.printStackTrace();
+			throw new RuntimeException("Errore di connessione al Database.");
 		}
+
+
 	}
 
 }
